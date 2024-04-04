@@ -1,0 +1,25 @@
+/* CSS untuk tabel */
+.table {
+    background-color: #d1f9d1; /* Warna hijau muda */
+}
+
+/* CSS untuk baris ganjil */
+.table tbody tr:nth-child(odd) {
+    background-color: #e9ffe6; /* Warna latar belakang untuk baris ganjil */
+}
+
+/* CSS untuk baris genap */
+.table tbody tr:nth-child(even) {
+    background-color: #d1f9d1; /* Warna latar belakang untuk baris genap, sama dengan warna latar belakang tabel */
+}
+
+/* CSS untuk judul kolom */
+.table thead {
+    background-color: #64dd17; /* Warna latar belakang judul kolom */
+    color: #ffffff; /* Warna teks judul kolom */
+}
+
+/* CSS untuk teks pada sel */
+.table td, .table th {
+    color: #000000; /* Warna teks pada sel */
+}
