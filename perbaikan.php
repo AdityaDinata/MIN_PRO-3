@@ -18,33 +18,6 @@ if(isset($_POST['logout'])){
     exit();
 }
 
-// Check the role of the user
-$sql = "SELECT role FROM users WHERE id = '{$_SESSION['id']}'";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $role = $row['role'];
-    
-
-    if ($role !== 'User') {
-        header("Location: login_register.php");
-        exit();
-    }
-} else {
-  
-    header("Location: login_register.php");
-    exit();
-}
-
-// Process logout
-if(isset($_POST['logout'])){
-    // Destroy the session
-    session_destroy();
-    header("Location: login_register.php");
-    exit();
-}
-
 $errors = [];
 
 // Get the user_id from the session
@@ -332,61 +305,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_health'])) {
     exit();
 }
 
-
-
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_consultation"])) {
-    // Check if the user is logged in
-    if (!isset($_SESSION['id'])) {
-        // Redirect or display error message if user is not logged in
-    } else {
-        // Get the user ID from the session
-        $userId = $_SESSION['id'];
-
-        // Get the values submitted through the form
-        $consultationType = $_POST["consultation_type"];
-        $message = $_POST["message"];
-
-        // Call the function to save the consultation to the database
-        saveConsultation($userId, $consultationType, $message);
-    }
-}
-
-// Function to save consultation to the database
-function saveConsultation($userId, $consultationType, $message) {
-    global $conn; // Access the database connection variable defined at the beginning of the script
-
-    // Escape input data
-    $userId = mysqli_real_escape_string($conn, $userId);
-    $consultationType = mysqli_real_escape_string($conn, $consultationType);
-    $message = mysqli_real_escape_string($conn, $message);
-
-    // SQL query to save the consultation to the database
-    $sql = "INSERT INTO consultations (patient_id, consultation_date, message) VALUES ('$userId', NOW(), '$message')";
-
-    if ($conn->query($sql) === TRUE) {
-        $_SESSION['success_message'] = "Konsultasi berhasil dikirim.";
-        // Redirect untuk mencegah form resubmission saat menyegarkan halaman
-        header("Location: {$_SERVER['PHP_SELF']}");
-        exit();
-    } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
-    }
-}
-
-// Retrieve user's consultation data including responses
-$sql_get_consultations = "SELECT * FROM consultations WHERE patient_id = '$user_id'";
-$result_consultations = $conn->query($sql_get_consultations);
-$consultationData = [];
-while ($row = $result_consultations->fetch_assoc()) {
-    $consultationData[] = $row;
-}
-
-
-
-
-
-
-
 ?>
 
 <!DOCTYPE html>
@@ -403,16 +321,12 @@ while ($row = $result_consultations->fetch_assoc()) {
         .container {
             margin-top: 50px;
         }
-        body {
-            background-color: #add8e6; /* Ubah warna background menjadi biru */
-        }
     </style>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-dark bg-gradient">
+    <nav class="navbar navbar-expand-lg navbar-light  bg-dark bg-gradient">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#"><img src="Img/health2.png" alt="Health Tracker Logo"></a>
             <a class="navbar-brand text-white" href="#"><b>Health Tracker Online</b></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -428,9 +342,6 @@ while ($row = $result_consultations->fetch_assoc()) {
                     <li class="nav-item">
                         <a class="nav-link text-white"  href="#health_data">Parameter Kesehatan</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white"  href="#health_consultation">Konsultasi</a>
-                    </li>
                 </ul>
                 <form class="d-flex" method="post">
                     <button class="btn btn-outline-success" type="submit" name="logout">Logout</button>
@@ -439,12 +350,12 @@ while ($row = $result_consultations->fetch_assoc()) {
         </div>
     </nav>
 
-
     <div class="container" id="physical_activity">
         <!-- Physical Activity Form -->
         <h2 class="text-center mb-4">Aktivitas Fisik</h2>
         <div class="card mb-4">
             <div class="card-body">
+                <h4 class="card-title">Aktivitas Fisik</h4>
                 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
                     <div class="mb-3">
                         <label for="activity_name" class="form-label">Nama Aktivitas:</label>
@@ -458,18 +369,16 @@ while ($row = $result_consultations->fetch_assoc()) {
                         <label for="activity_date" class="form-label">Tanggal:</label>
                         <input type="date" name="activity_date" class="form-control">
                     </div>
-                    <div class="d-grid gap-2">
-                    <button type="submit" name="submit_activity" class="btn btn-success btn-md">Catat</button>
-                    <a href="#detail_activity" class="btn btn-secondary btn-md">Lihat Catatan</a>
+                    <div class="d-grid">
+                        <button type="submit" name="submit_activity" class="btn btn-primary">Submit</button>
                     </div>
-
                 </form>
             </div>
         </div>
     </div>
           <!-- Display Physical Activity Data -->
-    <div class="container" id="detail_activity">
-    <h4>Catatan Aktivitas Fisik</h4>
+          <div>
+    <h4>Detail Aktivitas Fisik</h4>
     <table class="table">
         <thead>
             <tr>
@@ -491,7 +400,7 @@ while ($row = $result_consultations->fetch_assoc()) {
                         <!-- Delete button -->
                         <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" style="display: inline-block;">
                             <input type="hidden" name="delete_activity_id" value="<?php echo $activity['id']; ?>">
-                            <button type="submit" name="delete_activity" class="btn btn-danger btn-sm" onclick="return confirm('Apakah anda yakin ingin menghapus catatan ini?')">Delete</button>
+                            <button type="submit" name="delete_activity" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this activity?')">Delete</button>
                         </form>
                     </td>
                 </tr>
@@ -516,9 +425,10 @@ while ($row = $result_consultations->fetch_assoc()) {
                 <label for="edit_activity_date" class="form-label">Tanggal:</label>
                 <input type="date" id="edit_activity_date" name="edit_activity_date" class="form-control">
             </div>
-            <div class="d-grid gap-2">
-                <button type="submit" name="submit_edit_activity" class="btn btn-primary">Simpan Perubahan</button>
-                <button type="button" class="btn btn-secondary cancel-edit">Batal</button>
+            <div class="d-grid">
+                <button type="submit" name="submit_edit_activity" class="btn btn-primary">Save Changes</button>
+                <br>
+                <button type="button" class="btn btn-secondary cancel-edit">Cancel</button>
             </div>
         </form>
     </div>
@@ -529,6 +439,7 @@ while ($row = $result_consultations->fetch_assoc()) {
         <h2 class="text-center mb-4">Asupan Makanan</h2>
         <div class="card mb-4">
             <div class="card-body">
+                <h4 class="card-title">Asupan Makanan</h4>
                 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
                     <div class="mb-3">
                         <label for="food_name" class="form-label">Nama Makanan:</label>
@@ -542,9 +453,8 @@ while ($row = $result_consultations->fetch_assoc()) {
                         <label for="intake_date" class="form-label">Tanggal:</label>
                         <input type="date" name="intake_date" class="form-control">
                     </div>
-                    <div class="d-grid gap-2">
-                    <button type="submit" name="submit_food" class="btn btn-success btn-md">Catat</button>
-                    <a href="detail.php" class="btn btn-secondary btn-md">Lihat Catatan</a>
+                    <div class="d-grid">
+                        <button type="submit" name="submit_food" class="btn btn-primary">Submit</button>
                     </div>
                 </form>
             </div>
@@ -552,7 +462,7 @@ while ($row = $result_consultations->fetch_assoc()) {
     </div>
     <!-- Display Food Intake Data -->
 <div>
-    <h4>Catatan Asupan Makanan</h4>
+    <h4>Detail Asupan Makanan</h4>
     <table class="table">
         <thead>
             <tr>
@@ -571,8 +481,8 @@ while ($row = $result_consultations->fetch_assoc()) {
                     <td>
                     <button class="btn btn-sm btn-primary edit-food" data-id="<?= $food['id'] ?>">Edit</button>
                     <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" style="display: inline-block;">
-                        <input type="hidden" name="delete_food_id" value="<?php echo $food['id']; ?>">
-                        <button type="submit" name="delete_food" class="btn btn-danger btn-sm" onclick="return confirm('Apakah anda yakin ingin menghapus catatan ini?')">Delete</button>
+                        <input type="hidden" name="delete_activity_id" value="<?php echo $activity['id']; ?>">
+                        <button type="submit" name="delete_activity" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this activity?')">Delete</button>
                     </form>
                     </td>
                 </tr>
@@ -597,9 +507,10 @@ while ($row = $result_consultations->fetch_assoc()) {
                 <label for="edit_intake_date" class="form-label">Tanggal:</label>
                 <input type="date" id="edit_intake_date" name="edit_intake_date" class="form-control">
             </div>
-            <div class="d-grid gap-2">
-                <button type="submit" name="submit_edit_food" class="btn btn-primary">Simpan Perubahan</button>
-                <button type="button" class="btn btn-secondary cancel-edit">Batal</button>
+            <div class="d-grid">
+                <button type="submit" name="submit_edit_food" class="btn btn-primary">Save Changes</button>
+                <br>
+                <button type="button" class="btn btn-secondary cancel-edit">Cancel</button>
             </div>
         </form>
     </div>
@@ -611,6 +522,7 @@ while ($row = $result_consultations->fetch_assoc()) {
         <h2 class="text-center mb-4">Parameter Kesehatan</h2>
         <div class="card mb-4">
             <div class="card-body">
+                <h4 class="card-title">Parameter Kesehatan</h4>
                 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
                     <div class="mb-3">
                         <label for="weight" class="form-label">Berat Badan (KG):</label>
@@ -624,9 +536,8 @@ while ($row = $result_consultations->fetch_assoc()) {
                         <label for="measurement_date" class="form-label">Tanggal:</label>
                         <input type="date" name="measurement_date" class="form-control">
                     </div>
-                    <div class="d-grid gap-2">
-                    <button type="submit" name="submit_health"  class="btn btn-success btn-md">Catat</button>
-                    <a href="detail.php" class="btn btn-secondary btn-md">Lihat Catatan</a>
+                    <div class="d-grid">
+                        <button type="submit" name="submit_health" class="btn btn-primary">Submit</button>
                     </div>
                 </form>
             </div>
@@ -648,7 +559,7 @@ while ($row = $result_consultations->fetch_assoc()) {
 
         <!-- Display Health Data and BMI Calculation -->
         <div>
-            <h4>Catatan Parameter Kesehatan</h4>
+            <h4>Detail Kesehatan</h4>
             <?php
             $bmi = isset($weight) && isset($height) && $height > 0 ? round($weight / (($height / 100) ** 2), 2) : '';
             $backgroundColor = $bmi > 25 ? 'rgba(255, 99, 132, 0.6)' : 'rgba(75, 192, 192, 0.6)';
@@ -661,13 +572,14 @@ while ($row = $result_consultations->fetch_assoc()) {
             <h2 class="mt-5 mb-4">Data Kesehatan Dalam Grafik</h2>
             <div class="card mb-4">
                 <div class="card-body">
+                    <h5 class="card-title">Data Kesehatan</h5>
                     <canvas id="healthChart"></canvas>
                 </div>
             </div>
         </div>
         <!-- Display Health Data -->
 <div>
-    <h4>Detail Kesehatan Dalam Tabel</h4>
+    <h4>Detail Kesehatan</h4>
     <table class="table">
         <thead>
             <tr>
@@ -689,7 +601,7 @@ while ($row = $result_consultations->fetch_assoc()) {
                         <!-- Delete button -->
                         <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" style="display: inline-block;">
                             <input type="hidden" name="delete_health_id" value="<?php echo $health['id']; ?>">
-                            <button type="submit" name="delete_health" class="btn btn-danger btn-sm" onclick="return confirm('apakah kamu yakin ingin menghapus data kesehatan ini?')">Delete</button>
+                            <button type="submit" name="delete_health" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this health data?')">Delete</button>
                         </form>
                     </td>
                 </tr>
@@ -714,84 +626,13 @@ while ($row = $result_consultations->fetch_assoc()) {
             <label for="edit_measurement_date" class="form-label">Tanggal:</label>
             <input type="date" id="edit_measurement_date" name="edit_measurement_date" class="form-control">
         </div>
-        <div class="d-grid gap-2">
-            <button type="submit" name="submit_edit_health" class="btn btn-primary">Simpan Perubahan</button>
-            <button type="button" class="btn btn-secondary cancel-edit">Batal</button>
+        <div class="d-grid">
+            <button type="submit" name="submit_edit_health" class="btn btn-primary">Save Changes</button>
+            <br>
+            <button type="button" class="btn btn-secondary cancel-edit">Cancel</button>
         </div>
     </form>
 </div>
-
-
-<!-- Consultation Form -->
-<div class="container" id="health_consultation">
-    <h2 class="text-center mb-4">Konsultasi</h2>
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-                <div class="mb-3">
-                    <label for="consultation_type" class="form-label">Jenis Konsultasi:</label>
-                    <select name="consultation_type" class="form-control">
-                        <option value="activity">Konsultasi Aktivitas Fisik</option>
-                        <option value="food">Konsultasi Asupan Makanan</option>
-                        <option value="health">Konsultasi Parameter Kesehatan</option>
-                        <option value="all">Konsultasi Ketiganya</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="message" class="form-label">Pesan:</label>
-                    <textarea name="message" class="form-control" rows="5"></textarea>
-                </div>
-                <div class="d-grid gap-2">
-                    <button type="submit" name="submit_consultation" class="btn btn-success btn-md">Kirim Konsultasi</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Show Consultations and Responses -->
-<div class="container" id="consultations">
-    <h2 class="text-center mb-4">Konsultasi Pasien</h2>
-    <button id="toggleResponse" class="btn btn-primary mb-3">Lihat Tanggapan</button>
-    <div class="consultation-response" style="display: none;">
-        <?php if (!empty($consultationData)) : ?>
-            <?php foreach ($consultationData as $consultation) : ?>
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Konsultasi Pasien</h5>
-                        <p><strong>ID Pasien:</strong> <?php echo $consultation['patient_id']; ?></p>
-                        <p><strong>Tanggal Konsultasi:</strong> <?php echo $consultation['consultation_date']; ?></p>
-                        <p><strong>Pesan:</strong> <?php echo $consultation['message']; ?></p>
-                        <?php if (!empty($consultation['response'])) : ?>
-                            <p><strong>Tanggapan Dokter:</strong> <?php echo $consultation['response']; ?></p>
-                        <?php else : ?>
-                            <p><strong>Tanggapan Dokter:</strong> Belum ada tanggapan</p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php else : ?>
-            <p class="text-center">Tidak ada konsultasi yang tersedia.</p>
-        <?php endif; ?>
-    </div>
-    <button id="hideResponse" class="btn btn-secondary mb-3" style="display: none;">Sembunyikan Tanggapan</button>
-</div>
-
-        <script>
-            document.getElementById('toggleResponse').addEventListener('click', function() {
-                document.querySelector('.consultation-response').style.display = 'block';
-                document.getElementById('toggleResponse').style.display = 'none';
-                document.getElementById('hideResponse').style.display = 'block';
-            });
-
-            document.getElementById('hideResponse').addEventListener('click', function() {
-                document.querySelector('.consultation-response').style.display = 'none';
-                document.getElementById('toggleResponse').style.display = 'block';
-                document.getElementById('hideResponse').style.display = 'none';
-            });
-        </script>
-
-
 
 
 
@@ -892,14 +733,5 @@ while ($row = $result_consultations->fetch_assoc()) {
 
 
     </script>
-    <script>
-    $(document).ready(function() {
-        <?php if(isset($_SESSION['success_message'])): ?>
-            alert("<?php echo $_SESSION['success_message']; ?>");
-            <?php unset($_SESSION['success_message']); ?>
-        <?php endif; ?>
-    });
-    </script>
-
 </body>
 </html>

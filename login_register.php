@@ -48,6 +48,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     $_SESSION["role"] = $db_role;
                                     if ($role == "Admin") {
                                         header("location: admin.php");
+                                    } elseif ($role == "Dokter") {
+                                        header("location: dokter.php");
                                     } else {
                                         header("location: index.php");
                                     }
@@ -84,6 +86,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        body {
+            background-color: #98FB98; /* Warna latar belakang di luar kotak login */
+        }
         .login-container {
             background-color: #f8f9fa; /* Warna latar belakang kotak login */
             border-radius: 10px; /* Sudut melengkung kotak login */
@@ -97,6 +102,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <div class="login-container">
+                    <div style="text-align: center;">
+                     <img src="Img/health4.png" alt="">
+                    </div>
                     <h2 class="text-center mb-4">Login</h2>
                     <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                         <div class="form-group">
@@ -121,6 +129,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <select name="role" class="form-select">
                                 <option value="User" selected>User</option>
                                 <option value="Admin">Admin</option>
+                                <option value="Dokter">Dokter</option> <!-- Menambahkan pilihan untuk peran "Dokter" -->
                             </select>
                         </div>
                         <br>
