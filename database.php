@@ -2,9 +2,9 @@
 // Fungsi untuk koneksi ke database
 function connectDB() {
     $servername = "localhost";
-    $username = "root";
-    $password = "";
-    $dbname = "online_health";
+    $username = "id22040888_adit";
+    $password = "Onlinehealth1234@";
+    $dbname = "id22040888_online_health";
 
     // Membuat koneksi
     $conn = new mysqli($servername, $username, $password, $dbname);
